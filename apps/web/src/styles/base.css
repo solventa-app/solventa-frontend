@@ -1,0 +1,24 @@
+/* Estilos base mínimos. El sistema visual real sale del prototipo de Figma (plano v21):
+   los tokens (color, tipografía, espaciado) se definen aquí cuando se construya la primera pantalla. */
+:root {
+  --color-fondo: #ffffff;
+  --color-texto: #1a1a1a;
+  --color-suave: #6b6b6b;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--color-texto);
+  background: var(--color-fondo);
+}
+
+body {
+  margin: 0;
+}
+
+.pantalla {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.pendiente {
+  color: var(--color-suave);
+}

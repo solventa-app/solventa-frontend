@@ -1,0 +1,76 @@
+name: CI web
+
+# Corre solo si cambia la web, el contrato o este workflow (el móvil tiene su propio pipeline).
+on:
+  pull_request:
+    paths: ['apps/web/**', 'contrato/**', 'scripts/**', '.github/workflows/ci-web.yml']
+  push:
+    branches: [main]
+    paths: ['apps/web/**', 'contrato/**', 'scripts/**', '.github/workflows/ci-web.yml']
+
+concurrency:
+  group: ci-web-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci
+      - name: Tipos (vue-tsc)
+        run: npm run typecheck
+      - name: Los tipos generados están al día con el contrato
+        run: |
+          npm run codegen
+          git diff --exit-code -- src/graphql/tipos.ts
+      - name: Pruebas (Vitest)
+        run: npm test
+      - name: Build
+        run: npm run build
+
+  contrato:
+    # Se activa cuando el repo define la variable BACKEND_REPO (p. ej. "mi-org/solventa-backend") y,
+    # si el backend es privado, el secreto BACKEND_READ_TOKEN con permiso de lectura.
+    if: vars.BACKEND_REPO != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.BACKEND_REPO }}
+          token: ${{ secrets.BACKEND_READ_TOKEN || github.token }}
+          path: backend
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: La copia del contrato coincide con el main del backend
+        run: node scripts/contrato.mjs verificar
+        env:
+          BACKEND_SCHEMA_PATH: ${{ github.workspace }}/backend/contracts/graphql/schema.graphql
+
+  sonar:
+    # Solo si existen los secretos SONAR_TOKEN y SONAR_HOST_URL.
+    needs: [web]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.SONAR_TOKEN != ''
+      - uses: SonarSource/sonarqube-scan-action@v4
+        if: env.SONAR_TOKEN != ''
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

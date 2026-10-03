@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run codegen:*)",
+      "Bash(npm run contrato:verificar:*)",
+      "Bash(node scripts/contrato.mjs verificar)"
+    ],
+    "ask": [
+      "Bash(npm run contrato:sincronizar:*)",
+      "Bash(npm install:*)",
+      "Bash(npm publish:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}

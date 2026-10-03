@@ -1,0 +1,44 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { ejecutar } from '../src/graphql/cliente'
+import { servidor } from '../src/mocks/node'
+
+const SOLICITAR = `mutation solicitarOferta($entrada: SolicitudOfertaInput!) {
+  solicitarOferta(entrada: $entrada) {
+    __typename
+    ... on Oferta { tipo }
+    ... on ErrorOferta { puedeReintentar }
+  }
+}`
+
+const entrada = (documentoIdentidad: string) => ({
+  entrada: {
+    consentimientoId: 'consentimiento-1',
+    documentoIdentidad,
+    valorCredito: '250000000',
+    plazoMeses: 240,
+    direccionInmueble: 'Calle 1 # 2-3',
+  },
+})
+
+// El cliente usa una URL relativa (/graphql/web); en Node se resuelve contra un origen de prueba.
+const fetchPrueba: typeof fetch = (url, init) => fetch(new URL(String(url), 'http://localhost'), init)
+
+describe('mocks del BFF', () => {
+  beforeAll(() => servidor.listen({ onUnhandledRequest: 'error' }))
+  afterAll(() => servidor.close())
+
+  it('devuelve oferta COMPLETA por defecto', async () => {
+    const r = await ejecutar<{ solicitarOferta: { tipo: string } }>(SOLICITAR, entrada('123'), fetchPrueba)
+    expect(r.solicitarOferta.tipo).toBe('COMPLETA')
+  })
+
+  it('devuelve oferta PRELIMINAR con documento terminado en 999', async () => {
+    const r = await ejecutar<{ solicitarOferta: { tipo: string } }>(SOLICITAR, entrada('999'), fetchPrueba)
+    expect(r.solicitarOferta.tipo).toBe('PRELIMINAR')
+  })
+
+  it('devuelve ErrorOferta con reintento con documento terminado en 000', async () => {
+    const r = await ejecutar<{ solicitarOferta: { puedeReintentar: boolean } }>(SOLICITAR, entrada('000'), fetchPrueba)
+    expect(r.solicitarOferta.puedeReintentar).toBe(true)
+  })
+})
