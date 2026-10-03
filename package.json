@@ -1,0 +1,15 @@
+{
+  "name": "solventa-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Frontend de Solventa: web (Vue 3) y móvil (Flutter). Cada app tiene su propio toolchain; este package.json solo ofrece atajos.",
+  "type": "module",
+  "scripts": {
+    "contrato:verificar": "node scripts/contrato.mjs verificar",
+    "contrato:sincronizar": "node scripts/contrato.mjs sincronizar",
+    "web:dev": "npm run dev --prefix apps/web",
+    "web:dev:mock": "npm run dev:mock --prefix apps/web",
+    "web:test": "npm test --prefix apps/web",
+    "web:build": "npm run build --prefix apps/web"
+  }
+}
