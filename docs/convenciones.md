@@ -4,9 +4,14 @@ Mismas reglas de flujo que `solventa-backend` (ver su `docs/convenciones.md` y A
 
 ## Ramas y flujo
 
-- **Trunk-based.** `main` protegida (PR obligatorio, 1 revisión, CI en verde). Ramas cortas desde `main`: `KAN-24-formulario-captura`.
-- Tag por sprint al cerrarlo: `sprint-1`, `sprint-2`, `sprint-3` (el mismo nombre que en `solventa-backend`).
+- **Trunk-based.** `main` está protegida por un ruleset (`.github/rulesets/main.json`): PR obligatorio, 1 aprobación (se descarta si hay push nuevo), hilos de revisión resueltos, checks `web`, `mobile`, `Título del PR` y `Nombre de rama` en verde, solo squash, historial lineal y sin force-push ni borrado. No hay excepciones configuradas.
+- **Ramas cortas desde `main`, con el patrón `tipo/KAN-N-descripcion`** y tipo `feat`, `fix` o `chore`: `feat/KAN-24-formulario-captura`, `fix/KAN-31-validacion-correo`. Lo valida el check `Nombre de rama` (`pr-rama.yml`), obligatorio en `main`: bloquea el merge, no la creación de la rama (GitHub no aplica reglas de nombre de rama en este plan). Las de Dependabot (`dependabot/**`) están exentas. GitHub las borra al hacer merge.
+- Tag por sprint al cerrarlo: `sprint-1`, `sprint-2`, `sprint-3` (el mismo nombre que en `solventa-backend`). Los `sprint-*` están protegidos: no se pueden mover ni borrar (`.github/rulesets/tags.json`).
 - Cada merge a `main` deja la web publicable en staging.
+- **Dependabot:** los PRs patch y minor se aprueban y se integran solos cuando los checks pasan (`dependabot-auto-merge.yml`); los major los revisa una persona.
+- **El repo es público**, que es lo que hace gratuitos los rulesets: no se versionan secretos ni datos personales. *Secret scanning* y *push protection* están activos.
+- `CI web` y `CI mobile` corren en **todo** PR (sin filtro de rutas) para que `web` y `mobile` se puedan exigir como checks; en `push` a `main` siguen filtrados por ruta.
+- Los rulesets son código. Si hay que recrearlos: `gh api -X POST repos/solventa-app/solventa-frontend/rulesets --input .github/rulesets/main.json` (igual con `tags.json`).
 
 ## Commits y PR
 
